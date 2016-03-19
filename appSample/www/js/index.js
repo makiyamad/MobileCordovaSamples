@@ -33,17 +33,53 @@ var app = {
 };
 
 var communicator = (function(){
+    //objeto em memoria que armazena as mensagens salvas
+    var savedMessages = [];
+    //referencia a listview
+    var messagesHtml = $('#messages');    
 
     var onSendMessage = function() {
-        console.log('envia mensagem');
+        var message = {text: $('#message').val()};
+        //inclui na lista de mensagens salvas
+        savedMessages.push(message);
+        //persiste na localStorage
+        window.localStorage.setItem('messages', JSON.stringify(savedMessages));
+        //atualiza a lista no html
+        renderMessages();
     };
 
     var onDeleteMessages = function(){
-        console.log('remove mensagens');
+        //apaga todas as mensagens da localStorage
+        window.localStorage.clear();
+        //limpa do objeto em memoria
+        savedMessages = [];
+        renderMessages();
     }
+
+    var renderMessages = function(refresh){
+        //se nao houver nenhuma mensagem renderiza 'no messages'
+        if(savedMessages === []){
+            $('#messages').html('<li>no messages</li>'); return;
+        }
+
+        //apaga o que foi gravado anteriormente na listview
+        messagesHtml.html('');
+        //itera sobre a lista de mensagens salvas
+        savedMessages.forEach(function(msg){
+            //cria um li para cada item da lista de mensagens
+            messagesHtml.append('<li>' + msg.text + '</li>');
+        });
+    }  
 
     return {
         init: function(){
+            //busca as mensagens salvas em localStorage
+            var messages = window.localStorage.getItem('messages');
+            //converte as mensagens de string para array javascript
+            if(messages) savedMessages = JSON.parse(messages);
+            //rendiza as mensagens do array de savedMessages
+            renderMessages();
+
             //registra os eventos de touch no botao de send-message e delete-messages
             $('#send-message').on("tap", onSendMessage);            
             $('#delete-messages').on("tap", onDeleteMessages);
