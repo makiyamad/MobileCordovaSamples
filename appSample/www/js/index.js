@@ -32,11 +32,17 @@ var app = {
     }
 };
 
+var html = {
+    li: function(txt){
+        return "<li>" + txt + "</li>";
+    }
+}
+
 var communicator = (function(){
     //objeto em memoria que armazena as mensagens salvas
     var savedMessages = [];
     //referencia a listview
-    var messagesHtml = $('#messages');    
+    var messagesHtml = $('#messages');
 
     var onSendMessage = function() {
         var message = {text: $('#message').val()};
@@ -44,8 +50,10 @@ var communicator = (function(){
         savedMessages.push(message);
         //persiste na localStorage
         window.localStorage.setItem('messages', JSON.stringify(savedMessages));
+        //limpa o textarea
+        $('#message').val('');
         //atualiza a lista no html
-        renderMessages();
+        renderMessages(true);
     };
 
     var onDeleteMessages = function(){
@@ -53,13 +61,13 @@ var communicator = (function(){
         window.localStorage.clear();
         //limpa do objeto em memoria
         savedMessages = [];
-        renderMessages();
+        renderMessages(true);
     }
 
     var renderMessages = function(refresh){
         //se nao houver nenhuma mensagem renderiza 'no messages'
         if(savedMessages === []){
-            $('#messages').html('<li>no messages</li>'); return;
+            $('#messages').html(html.li('no messages')); return;
         }
 
         //apaga o que foi gravado anteriormente na listview
@@ -67,9 +75,12 @@ var communicator = (function(){
         //itera sobre a lista de mensagens salvas
         savedMessages.forEach(function(msg){
             //cria um li para cada item da lista de mensagens
-            messagesHtml.append('<li>' + msg.text + '</li>');
+            messagesHtml.append(html.li(msg.text));
+            //caso já exista uma listview criada, executa o comando de refresh
+            // para aplicar o estilo novamente apos recriar a lista
+            if(refresh) messagesHtml.listview('refresh');
         });
-    }  
+    }
 
     return {
         init: function(){
@@ -79,7 +90,6 @@ var communicator = (function(){
             if(messages) savedMessages = JSON.parse(messages);
             //rendiza as mensagens do array de savedMessages
             renderMessages();
-
             //registra os eventos de touch no botao de send-message e delete-messages
             $('#send-message').on("tap", onSendMessage);            
             $('#delete-messages').on("tap", onDeleteMessages);
