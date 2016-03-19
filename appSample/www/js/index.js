@@ -32,4 +32,26 @@ var app = {
     }
 };
 
+var communicator = (function(){
+
+    var onSendMessage = function() {
+        console.log('envia mensagem');
+    };
+
+    var onDeleteMessages = function(){
+        console.log('remove mensagens');
+    }
+
+    return {
+        init: function(){
+            //registra os eventos de touch no botao de send-message e delete-messages
+            $('#send-message').on("tap", onSendMessage);            
+            $('#delete-messages').on("tap", onDeleteMessages);
+        }
+    };
+
+})();
+
+
 app.initialize();
+communicator.init();
