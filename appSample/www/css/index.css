@@ -124,3 +124,18 @@ h1 {
         margin: 5px !important;
         position: relative !important;
 }
+
+.img-thumb{
+    max-width:200px;
+    min-width:100px; 
+    min-height:100px;
+}
+
+.img-container{
+    overflow: hidden;    
+    border-radius: 50px;
+    -webkit-border-radius: 50px;
+    -moz-border-radius: 50px;    
+    width:100px;
+    height:100px;
+}
