@@ -139,3 +139,18 @@ h1 {
     width:100px;
     height:100px;
 }
+
+.square{
+    width:30px;
+    display: inline-block;
+    vertical-align:bottom;
+    -webkit-perspective: 100px; 
+    -moz-perspective: 100px;
+    -ms-perspective: 100px; 
+    perspective: 100px;
+    -webkit-transform-style: preserve-3d; 
+    -moz-transform-style: preserve-3d;
+    -ms-transform-style: preserve-3d; 
+    transform-style: preserve-3d;
+    margin:0px 5px;
+}

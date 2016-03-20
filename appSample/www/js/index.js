@@ -41,6 +41,35 @@ var html = {
     }
 }
 
+var accelerometer = (function(){
+    //$('#box-phone-1')
+
+    var transforms = ['-webkit-transform', '-moz-transform', '-ms-transform', 'transform'];
+
+    var accelerometerSuccess = function(data){
+
+        var rotate = {};
+        transforms.forEach(function(attr){
+            rotate[attr] = 'rotateX(' + (data.x*100)
+             + 'deg) rotateX(' + (data.y*100)
+             + 'deg) rotateZ(' + (data.z*100) + 'deg)';
+        })
+
+        $('#box-phone-1').css(rotate);
+    }
+
+    var accelerometerError = function(err){
+        console.log('could not access acelerator ' + err)
+    }    
+
+    return {
+        init: function(){
+            var options = {frequency : 2000};
+            navigator.accelerometer.watchAcceleration(accelerometerSuccess, accelerometerError, options);
+        }
+    }
+})();
+
 var communicator = (function(){
     //objeto em memoria que armazena as mensagens salvas
     var savedMessages = [];
@@ -56,9 +85,15 @@ var communicator = (function(){
     }
 
     var onGetPhoto = function(){
-        navigator.camera.getPicture(onGetPhotoSuccess, onGetPhotoError, 
-            //{ sourceType : Camera.PictureSourceType.PHOTOLIBRARY, destinationType : Camera.DestinationType.DATA_URL });
-            { sourceType : Camera.PictureSourceType.CAMERA, destinationType : Camera.DestinationType.DATA_URL });
+
+        var options = { 
+                sourceType : Camera.PictureSourceType.PHOTOLIBRARY, 
+                destinationType : Camera.DestinationType.DATA_URL            
+            //    sourceType : Camera.PictureSourceType.CAMERA, 
+            //    destinationType : Camera.DestinationType.DATA_URL 
+            };
+
+        navigator.camera.getPicture(onGetPhotoSuccess, onGetPhotoError, options);
     }
 
     var onGetPhotoSuccess = function(imageData){        
@@ -118,8 +153,8 @@ var communicator = (function(){
             renderMessages();
             //registra os eventos de touch no botao de send-message e delete-messages
             $('#send-message').on("tap", onSendMessage);            
-            $('#delete-messages').on("tap", onDeleteMessages);            
-            $('#get-photo').on("taphold", onGetPhoto);            
+            $('#delete-messages').on("tap", onDeleteMessages);
+            $('#get-photo').on("taphold", onGetPhoto);
         }
     };
 
@@ -128,3 +163,4 @@ var communicator = (function(){
 
 app.initialize();
 communicator.init();
+accelerometer.init();
