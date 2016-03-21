@@ -28,7 +28,7 @@
         * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
             * Enable inline JS: add 'unsafe-inline' to default-src
         -->
-        <meta http-equiv="Content-Security-Policy" content="default-src &apos;self&apos; data: gap: https://ssl.gstatic.com &apos;unsafe-eval&apos;; style-src &apos;self&apos; &apos;unsafe-inline&apos;; media-src * data: blob:">
+        <meta http-equiv="Content-Security-Policy" content="default-src &apos;self&apos; data: gap: ws: http: https://ssl.gstatic.com &apos;unsafe-eval&apos;; style-src &apos;self&apos; &apos;unsafe-inline&apos;; media-src * data: blob:">
         <meta name="format-detection" content="telephone=no">
         <meta name="msapplication-tap-highlight" content="no">
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
@@ -41,10 +41,7 @@
     		<div data-role="header">
     			<h1>Home</h1>
     		</div>
-    		<ul data-role="listview">
-    			<li><a href="#page1"><div class="square"><img id="box-phone-1" src="img/phone.png" /></div>&nbsp;Page1</a></li>
-    			<li><a href="#page2">Page2</a></li>
-    			<li><a href="#page3">Page3</a></li>
+    		<ul data-role="listview" id="users">
     		</ul>
 
     		<div data-role="footer" data-position="fixed">

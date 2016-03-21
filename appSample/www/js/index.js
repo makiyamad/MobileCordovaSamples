@@ -38,11 +38,11 @@ var html = {
     },
     img: function(src, alt, cls, clsContainer){
         return "<div class='" + clsContainer + "'><img alt='" + alt + "' src='" + src + "' class='" + cls + "' /></div>";
-    }
+    },
+
 }
 
 var accelerometer = (function(){
-    //$('#box-phone-1')
 
     var transforms = ['-webkit-transform', '-moz-transform', '-ms-transform', 'transform'];
 
@@ -50,12 +50,15 @@ var accelerometer = (function(){
 
         var rotate = {};
         transforms.forEach(function(attr){
-            rotate[attr] = 'rotateX(' + (data.x*100)
-             + 'deg) rotateX(' + (data.y*100)
-             + 'deg) rotateZ(' + (data.z*100) + 'deg)';
+
+            var rotateX = 'rotateX(' + (data.x*100) + 'deg)';
+            var rotateY = 'rotateY(' + (data.y*100) + 'deg)';
+            var rotateZ = 'rotateZ(' + (data.z*100) + 'deg)';
+
+            rotate[attr] =  rotateX + rotateY + rotateZ;
         })
 
-        $('#box-phone-1').css(rotate);
+        $('#box-phone-d1').css(rotate);
     }
 
     var accelerometerError = function(err){
@@ -65,9 +68,54 @@ var accelerometer = (function(){
     return {
         init: function(){
             var options = {frequency : 2000};
-            navigator.accelerometer.watchAcceleration(accelerometerSuccess, accelerometerError, options);
+            navigator.accelerometer
+                .watchAcceleration(
+                    accelerometerSuccess, 
+                    accelerometerError, 
+                    options);
+        }
+    };
+})();
+
+var userData = (function(){
+    var myKey = 'a';
+    var usersList = [];
+
+    var onGetUserListSuccess = function(data){
+        usersList = data;
+        var usersHtml = $('#users');
+
+        usersList.forEach(function(u){
+            var item = html.li('<a href="#page"><div class="square"><img id="box-phone-' 
+                + u.user + '" src="img/phone.png" /></div>&nbsp;Dupla ' 
+                + u.user + '</a>');
+
+            usersHtml.append(item);
+        });
+
+        usersHtml.listview('refresh');
+    }
+
+    var getUserList = function(){
+
+        $.ajax({
+          dataType: 'jsonp',
+          jsonpCallback: 'jsonCallback',
+          contentType: 'application/json',
+          //url: 'https://github.com/makiyamad/MobileCordovaSamples/blob/master/appSample/www/data/alunos.txt?raw=true',
+          url: 'http://donuts4u3.servicos.ws/fei/alunos.txt',
+          success: onGetUserListSuccess
+        });
+
+    }
+
+    return {
+        myKey : 'a',
+        init : function(){
+            getUserList();
         }
     }
+
 })();
 
 var communicator = (function(){
@@ -107,6 +155,8 @@ var communicator = (function(){
 
     var onSendMessage = function() {
         storeMessage('text', $('#message').val());
+        //envia mensagem para outros clientes
+        socketClient.sendMessage($('#message').val());        
         //limpa o textarea
         $('#message').val('');
         //atualiza a lista no html
@@ -164,3 +214,4 @@ var communicator = (function(){
 app.initialize();
 communicator.init();
 accelerometer.init();
+userData.init();
