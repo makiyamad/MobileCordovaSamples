@@ -77,6 +77,46 @@ var accelerometer = (function(){
     };
 })();
 
+var socketClient = (function(){
+
+    var socket = null;
+    var connected = false;
+
+    var onSocketError = function(error) {
+        console.log('WebSocket Error: ' + error);
+    };
+
+    var onSocketOpen = function(event) {
+        console.log('Connected to: ws://echo.websocket.org');
+        connected = true;
+    };
+
+    var onSocketMessage = function(event) {
+        var message = event.data;
+        console.log('Received: ' + message);
+    };
+
+    var onSocketClose = function(event) {
+        console.log('Disconnected');
+    };
+
+    return {
+        init: function(){
+            socket = new WebSocket('ws://echo.websocket.org');
+            socket.onmessage = onSocketMessage;
+            socket.onerror = onSocketError;
+            socket.onopen = onSocketOpen;
+            socket.onclose = onSocketClose;
+        },
+        sendMessage : function(message){
+            if(socket && connected)
+                socket.send(message);
+        }        
+    };
+
+})();
+
+
 var userData = (function(){
     var myKey = 'a';
     var usersList = [];
@@ -102,7 +142,6 @@ var userData = (function(){
           dataType: 'jsonp',
           jsonpCallback: 'jsonCallback',
           contentType: 'application/json',
-          //url: 'https://github.com/makiyamad/MobileCordovaSamples/blob/master/appSample/www/data/alunos.txt?raw=true',
           url: 'http://donuts4u3.servicos.ws/fei/alunos.txt',
           success: onGetUserListSuccess
         });
@@ -214,4 +253,5 @@ var communicator = (function(){
 app.initialize();
 communicator.init();
 accelerometer.init();
+socketClient.init();
 userData.init();
