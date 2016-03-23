@@ -97,8 +97,12 @@ var socketClient = (function(){
     };
 
     var onSocketMessage = function(event) {
-        var message = event.data;
-        console.log('Received: ' + message);
+        var data = JSON.parse(event.data);
+
+        if(data.to === communicator.getFrom())
+            communicator.receiveMessage(data.type, data.message, data.from);
+
+        console.log('Received: ' + event.data);
     };
 
     var onSocketClose = function(event) {
@@ -107,7 +111,7 @@ var socketClient = (function(){
 
     return {
         init: function(){
-            socket = new WebSocket('ws://echo.websocket.org');
+            socket = new WebSocket('ws://127.0.0.1:1337');
             socket.onmessage = onSocketMessage;
             socket.onerror = onSocketError;
             socket.onopen = onSocketOpen;
@@ -116,7 +120,10 @@ var socketClient = (function(){
         sendMessage : function(message){
             if(socket && connected)
                 socket.send(message);
-        }        
+        },
+        close: function(){
+            socket.close();
+        }      
     };
 
 })();
@@ -157,9 +164,19 @@ var userListPage = (function(){
         }
     };
 
+    var onNavigate = function (event, data) {
+      var direction = data.state.direction;
+      if (direction == 'back') {
+        socketClient.close();
+        console.log('back clicked');
+      }
+    };
+
     var bindPageNavigationEvent = function(){
         $('.conversations').click(pageChangeClick);
-        $(document).on("pagebeforechange", onPageBeforeChange);        
+        $(document).on("pagebeforechange", onPageBeforeChange);      
+
+        $(window).on("navigate", onNavigate);
     }
 
     var getUserList = function(){
@@ -188,6 +205,7 @@ var communicator = (function(){
     var savedMessages = [];
     //armazena o usuario destino da conversa
     var to = '';
+    var from = '';
     //referência à chave de mensagens
     var messagesListKey = '';
     //referencia a listview
@@ -195,8 +213,8 @@ var communicator = (function(){
     //determines if this is the not first time this communicator is initialized
     var refresh = false;
 
-    var storeMessage = function(type, val){
-        var message = {value: val, type: type};
+    var storeMessage = function(type, val, user){
+        var message = {value: val, type: type, user: user};
         //inclui na lista de mensagens salvas
         savedMessages.push(message);
         //persiste na localStorage
@@ -216,7 +234,7 @@ var communicator = (function(){
     }
 
     var onGetPhotoSuccess = function(imageData){        
-        storeMessage('image64', imageData);
+        storeMessage('image64', imageData, from);
         renderMessages();
     }
 
@@ -225,9 +243,9 @@ var communicator = (function(){
     }    
 
     var onSendMessage = function() {
-        storeMessage('text', $('#message').val());
+        storeMessage('text', $('#message').val(), from);
         //envia mensagem para outros clientes
-        socketClient.sendMessage($('#message').val());        
+        socketClient.sendMessage('{"from":"'+ from + '", "to":"' + to + '", "message": "' + $('#message').val() + '", "type": "text" }');        
         //limpa o textarea
         $('#message').val('');
         //atualiza a lista no html
@@ -253,10 +271,11 @@ var communicator = (function(){
         //itera sobre a lista de mensagens salvas
         savedMessages.forEach(function(msg){
             //cria um li para cada item da lista de mensagens
-            if(msg.type === 'text') {messagesHtml.append(html.li(msg.value));}
+            var fromTxt = 'from ' + msg.user + ': ';
+            if(msg.type === 'text') {messagesHtml.append(html.li(fromTxt + msg.value));}
             if(msg.type === 'image64'){
                 var src = "data:image/jpeg;base64," + msg.value;
-                messagesHtml.append(html.li(html.img(src, 'image','img-thumb', 'img-container')));
+                messagesHtml.append(html.li(fromTxt + html.img(src, 'image','img-thumb', 'img-container')));
             }
             //caso já exista uma listview criada, executa o comando de refresh
             // para aplicar o estilo novamente apos recriar a lista
@@ -268,7 +287,8 @@ var communicator = (function(){
         init: function(user){
             savedMessages = [];
             to = user;
-            messagesListKey = 'messages_' + to;
+            from = $('#user-logged').val();
+            messagesListKey = 'messages_' + to + '_' + from;
             //busca as mensagens salvas em localStorage
             var messages = window.localStorage.getItem(messagesListKey);
             //converte as mensagens de string para array javascript
@@ -282,6 +302,16 @@ var communicator = (function(){
                 $('#get-photo').on("taphold", onGetPhoto);
             }
             refresh = true;
+        },
+        getFrom: function (){
+            return from;
+        },
+        receiveMessage: function(type, message, user){
+            storeMessage(type, message, user);
+            //limpa o textarea
+            $('#message').val('');
+            //atualiza a lista no html
+            renderMessages();            
         }
     };
 
