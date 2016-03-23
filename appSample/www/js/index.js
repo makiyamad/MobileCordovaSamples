@@ -29,6 +29,11 @@ var app = {
     onMobileInit: function() {
         $.mobile.defaultPageTransition = "none";
         $.mobile.defaultDialogTransition = "none";
+
+        //inicia o acelerômetro
+        accelerometer.init();
+        //obtem dados de usuario
+        userListPage.init();
     }
 };
 
@@ -117,7 +122,7 @@ var socketClient = (function(){
 })();
 
 
-var userData = (function(){
+var userListPage = (function(){
     var myKey = 'a';
     var usersList = [];
 
@@ -126,7 +131,7 @@ var userData = (function(){
         var usersHtml = $('#users');
 
         usersList.forEach(function(u){
-            var item = html.li('<a href="#page"><div class="square"><img id="box-phone-' 
+            var item = html.li('<a class="conversations" data-user="' + u.user + '"><div class="square"><img id="box-phone-' 
                 + u.user + '" src="img/phone.png" /></div>&nbsp;Dupla ' 
                 + u.user + '</a>');
 
@@ -134,6 +139,27 @@ var userData = (function(){
         });
 
         usersHtml.listview('refresh');
+        bindPageNavigationEvent();
+    }
+
+    var pageChangeClick = function(){
+        $.mobile.pageContainer.pagecontainer("change", "#page", {
+            user: $(this).attr("data-user"),
+            transition: "flip"
+        });        
+    }
+
+    var onPageBeforeChange = function (e, data) {
+        if (data.toPage === "#page") {
+            var user = data.options.user;
+            communicator.init(user);
+            socketClient.init();
+        }
+    };
+
+    var bindPageNavigationEvent = function(){
+        $('.conversations').click(pageChangeClick);
+        $(document).on("pagebeforechange", onPageBeforeChange);        
     }
 
     var getUserList = function(){
@@ -142,7 +168,7 @@ var userData = (function(){
           dataType: 'jsonp',
           jsonpCallback: 'jsonCallback',
           contentType: 'application/json',
-          url: 'http://donuts4u3.servicos.ws/fei/alunos.txt',
+          url: 'http://www.mocky.io/v2/56f0a2ef1000007f018ef257',
           success: onGetUserListSuccess
         });
 
@@ -160,15 +186,21 @@ var userData = (function(){
 var communicator = (function(){
     //objeto em memoria que armazena as mensagens salvas
     var savedMessages = [];
+    //armazena o usuario destino da conversa
+    var to = '';
+    //referência à chave de mensagens
+    var messagesListKey = '';
     //referencia a listview
     var messagesHtml = $('#messages');
+    //determines if this is the not first time this communicator is initialized
+    var refresh = false;
 
     var storeMessage = function(type, val){
         var message = {value: val, type: type};
         //inclui na lista de mensagens salvas
         savedMessages.push(message);
         //persiste na localStorage
-        window.localStorage.setItem('messages', JSON.stringify(savedMessages));
+        window.localStorage.setItem(messagesListKey, JSON.stringify(savedMessages));
     }
 
     var onGetPhoto = function(){
@@ -185,7 +217,7 @@ var communicator = (function(){
 
     var onGetPhotoSuccess = function(imageData){        
         storeMessage('image64', imageData);
-        renderMessages(true);
+        renderMessages();
     }
 
     var onGetPhotoError = function(err){
@@ -199,7 +231,7 @@ var communicator = (function(){
         //limpa o textarea
         $('#message').val('');
         //atualiza a lista no html
-        renderMessages(true);
+        renderMessages();
     };
 
     var onDeleteMessages = function(){
@@ -207,10 +239,10 @@ var communicator = (function(){
         window.localStorage.clear();
         //limpa do objeto em memoria
         savedMessages = [];
-        renderMessages(true);
+        renderMessages();
     }
 
-    var renderMessages = function(refresh){
+    var renderMessages = function(){
         //se nao houver nenhuma mensagem renderiza 'no messages'
         if(savedMessages === []){
             $('#messages').html(html.li('no messages')); return;
@@ -233,25 +265,26 @@ var communicator = (function(){
     }
 
     return {
-        init: function(){
+        init: function(user){
+            savedMessages = [];
+            to = user;
+            messagesListKey = 'messages_' + to;
             //busca as mensagens salvas em localStorage
-            var messages = window.localStorage.getItem('messages');
+            var messages = window.localStorage.getItem(messagesListKey);
             //converte as mensagens de string para array javascript
             if(messages) savedMessages = JSON.parse(messages);
             //rendiza as mensagens do array de savedMessages
             renderMessages();
             //registra os eventos de touch no botao de send-message e delete-messages
-            $('#send-message').on("tap", onSendMessage);            
-            $('#delete-messages').on("tap", onDeleteMessages);
-            $('#get-photo').on("taphold", onGetPhoto);
+            if(!refresh){
+                $('#send-message').on("tap", onSendMessage);            
+                $('#delete-messages').on("tap", onDeleteMessages);
+                $('#get-photo').on("taphold", onGetPhoto);
+            }
+            refresh = true;
         }
     };
 
 })();
 
-
 app.initialize();
-communicator.init();
-accelerometer.init();
-socketClient.init();
-userData.init();
