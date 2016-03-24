@@ -34,6 +34,7 @@ var app = {
         accelerometer.init();
         //obtem dados de usuario
         userListPage.init();
+        socketClient.init();
     }
 };
 
@@ -51,8 +52,7 @@ var accelerometer = (function(){
 
     var transforms = ['-webkit-transform', '-moz-transform', '-ms-transform', 'transform'];
 
-    var accelerometerSuccess = function(data){
-
+    var movePhoneIcon = function(data, user){
         var rotate = {};
         transforms.forEach(function(attr){
 
@@ -63,11 +63,22 @@ var accelerometer = (function(){
             rotate[attr] =  rotateX + rotateY + rotateZ;
         })
 
-        $('#box-phone-d1').css(rotate);
+        $('#box-phone-' + user).css(rotate);
+    } 
+
+    var accelerometerSuccess = function(data){
+
+        var from = $('#user-logged').val();
+        movePhoneIcon(data, from);
+        socketClient.sendMessage(
+            '{"from":"'+ from
+            + '", "x": ' + data.x 
+            + ', "y": ' + data.y 
+            + ', "z": ' + data.z + ', "type": "accelerometer" }');
     }
 
     var accelerometerError = function(err){
-        console.log('could not access acelerator ' + err)
+        console.log('could not access acelerator ' + err);
     }    
 
     return {
@@ -78,6 +89,9 @@ var accelerometer = (function(){
                     accelerometerSuccess, 
                     accelerometerError, 
                     options);
+        },
+        moveOtherUserPhone: function(data, user){
+            movePhoneIcon(data, user);
         }
     };
 })();
@@ -99,7 +113,9 @@ var socketClient = (function(){
     var onSocketMessage = function(event) {
         var data = JSON.parse(event.data);
 
-        if(data.to === communicator.getFrom())
+        if(data.type === 'accelerometer')
+            accelerometer.moveOtherUserPhone(data, data.from);
+        else if(data.to === communicator.getFrom())
             communicator.receiveMessage(data.type, data.message, data.from);
 
         console.log('Received: ' + event.data);
@@ -111,11 +127,13 @@ var socketClient = (function(){
 
     return {
         init: function(){
-            socket = new WebSocket('ws://127.0.0.1:1337');
-            socket.onmessage = onSocketMessage;
-            socket.onerror = onSocketError;
-            socket.onopen = onSocketOpen;
-            socket.onclose = onSocketClose;
+            if(!connected){
+                socket = new WebSocket('ws://127.0.0.1:1337');
+                socket.onmessage = onSocketMessage;
+                socket.onerror = onSocketError;
+                socket.onopen = onSocketOpen;
+                socket.onclose = onSocketClose;
+            }
         },
         sendMessage : function(message){
             if(socket && connected)
@@ -160,14 +178,12 @@ var userListPage = (function(){
         if (data.toPage === "#page") {
             var user = data.options.user;
             communicator.init(user);
-            socketClient.init();
         }
     };
 
     var onNavigate = function (event, data) {
       var direction = data.state.direction;
       if (direction == 'back') {
-        socketClient.close();
         console.log('back clicked');
       }
     };
