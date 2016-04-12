@@ -41,7 +41,14 @@
     		<div data-role="header">
     			<h1>Easy Communicator</h1>
     		</div>
-			<div>Who are you? <input type="text" placeholder="inform your user" id="user-logged" /></div>    		
+			<div class="ui-grid-b" id="logar-usuario">
+			<div class="ui-block-a" style="line-height:60px;vertical-align:middle;"><div>login:</div></div>
+			<div class="ui-block-b"><input type="text" placeholder="inform your user" id="user-logged" data-inline="true"/></div>
+			<div class="ui-block-c" style="text-align:right"><button data-role="button" data-inline="true" id="login">login</button></div>
+			</div>
+			<div id="usuario-logado" style="display:none">
+			Logado como: <b><span id="usuario-logado-txt"></span></b> <button data-role="button" data-inline="true" id="sair">sair</button>
+			</div>
     		<ul data-role="listview" id="users">
     		</ul>
 
@@ -71,6 +78,12 @@
     			</div><!-- /footer -->
     		</div><!-- /page1 -->
 
+			<div class="template">
+				<div id="t-img">
+				<div class="{clsContainer}"><img alt="{alt}" src="{src}" class="{cls}" /></div>
+				</div>
+			</div>
+			
     		<script type="text/javascript" src="cordova.js"></script>
     		<script type="text/javascript" src="js/jquery-1.11.1.min.js" id="cordova-jquery"></script>
     		<!-- como o evento de mobile init é gerado automaticamente, é necessário dar o bind do tratados de eventos antes que o jquery mobile seja carregado -->

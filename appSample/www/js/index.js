@@ -43,7 +43,11 @@ var html = {
         return "<li>" + txt + "</li>";
     },
     img: function(src, alt, cls, clsContainer){
-        return "<div class='" + clsContainer + "'><img alt='" + alt + "' src='" + src + "' class='" + cls + "' /></div>";
+        return  $('.t-img')
+					.replace("{clsContainer}", clsContainer)
+					.replace("{alt}", alt)
+					.replace("{src}", src)
+					.replace("{cls}", cls);
     },
 
 }
@@ -211,6 +215,27 @@ var userListPage = (function(){
         myKey : 'a',
         init : function(){
             getUserList();
+			
+			$('#login').on('click', function(){
+				
+				var userFound = false;
+				usersList.forEach(function(el){
+					if($('#user-logged').val() === el.user)
+						userFound = true;
+				});
+				
+				if(userFound){
+					$('#usuario-logado').show();
+					$('#logar-usuario').hide();
+					$('#usuario-logado-txt').html($('#user-logged').val());
+				}
+			});
+			
+			$('#sair').on('click', function(){
+					$('#usuario-logado').hide();
+					$('#logar-usuario').show();
+					$('#usuario-logado-txt').html('');				
+			});
         }
     }
 

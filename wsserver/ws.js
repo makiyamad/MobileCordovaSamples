@@ -1,6 +1,7 @@
 var WebSocketServer = require('websocket').server;
 var http = require('http');
-var webSocketsServerPort = 1337;
+var webSocketsServerPort = 9000;
+//var webSocketsServerPort = 1337;
 var clients = [];
 
 var server = http.createServer(function(request, response) {
